@@ -1,0 +1,88 @@
+version: "3"
+services:
+  authentication-service:
+    image: spring-security-auth
+    build: services/authentication
+    container_name: authentication-service
+    restart: on-failure
+    ports:
+      - "8083:8083"
+    environment:
+      MYSQL_HOST: mysql-service
+      MYSQL_PORT: 3306
+    depends_on:
+      - mysql-service
+    networks:
+      - streaming-network
+
+  file-system-service:
+    image: file-system
+    build: services/filesystem
+    container_name: file-system
+    restart: on-failure
+    ports:
+      - "8082:8082"
+    environment:
+      MYSQL_HOST: mysql-container
+      MYSQL_PORT: 3306
+    depends_on:
+      - mysql-service
+      - authentication-service
+    volumes:
+      - C:\Users\kamel\OneDrive\Desktop\videos:/videos
+    networks:
+      - streaming-network
+
+  video-streaming-service:
+    image: video-streaming
+    build: services/videostreaming
+    container_name: streaming-service
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    environment:
+      MYSQL_HOST: mysql-container
+      MYSQL_PORT: 3306
+      FILE_SYSTEM_DOMAIN: file-system
+      FILE_SYSTEM_PORT: 8082
+      AUTH_SERVICE_DOMAIN: authentication-service
+      AUTH_SERVICE_PORT: 8083
+    depends_on:
+      - mysql-service
+      - authentication-service
+    networks:
+      - streaming-network
+
+  video-uploading-service:
+    image: video-uploading
+    build: services/videouploading
+    container_name: upload-service
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    depends_on:
+      - authentication-service
+    networks:
+      - streaming-network
+    environment:
+      FILE_SYSTEM_DOMAIN: file-system
+      FILE_SYSTEM_PORT: 8082
+      AUTH_SERVICE_DOMAIN: authentication-service
+      AUTH_SERVICE_PORT: 8083
+
+  mysql-service:
+    container_name: mysql-container
+    image: mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: videostreaming
+      MYSQL_ROOT_PASSWORD: Password123
+    networks:
+      - streaming-network
+    volumes:
+      - C:\Users\kamel\OneDrive\Desktop\db:/var/lib/mysql
+
+networks:
+    streaming-network:
+      driver: bridge
