@@ -26,7 +26,6 @@ services:
       MYSQL_HOST: mysql-container
       MYSQL_PORT: 3306
     depends_on:
-      - mysql-service
       - authentication-service
     volumes:
       - C:\Users\kamel\OneDrive\Desktop\videos:/videos
@@ -48,7 +47,6 @@ services:
       AUTH_SERVICE_DOMAIN: authentication-service
       AUTH_SERVICE_PORT: 8083
     depends_on:
-      - mysql-service
       - authentication-service
     networks:
       - streaming-network
@@ -86,3 +84,5 @@ services:
 networks:
     streaming-network:
       driver: bridge
+
+
